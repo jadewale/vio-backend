@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+
+const yargs = require('yargs');
+const migrator = require('./dist-server/migrations').default;
+
+function runAction(actionType) {
+  let action;
+
+  if (actionType === 'up') {
+    action = migrator.up();
+  }
+
+  if (actionType === 'down') {
+    action = migrator.down({ to: 0 });
+  }
+
+  // eslint-disable-next-line promise/always-return
+  action.then(() => {
+    console.log('migration run successfully');
+    return process.exit();
+  }).catch((err) => {
+    console.error(err);
+    return process.exit(1);
+  });
+}
+
+// eslint-disable-next-line no-unused-expressions
+yargs
+  .command('up [files]', 'Runs all pending migrations', {}, async () => {
+    runAction('up');
+  })
+  .command('down', 'Reverts all previously applied migrations', {}, () => {
+    runAction('down');
+  })
+  .demandCommand(1, 'You need at least one command before moving on, up or down')
+  .argv;
